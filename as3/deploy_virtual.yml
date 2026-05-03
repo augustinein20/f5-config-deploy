@@ -1,0 +1,58 @@
+---
+- name: Deploy F5 Virtual Server
+  hosts: f5
+  gather_facts: no
+  collections:
+    - f5networks.f5_modules
+
+  tasks:
+
+    - name: Create Pool
+      bigip_pool:
+        provider:
+          server: "{{ ansible_host }}"
+          user: "{{ ansible_user }}"
+          password: "{{ ansible_password }}"
+          validate_certs: false
+
+        name: red-pool-1
+        partition: RED
+        monitors:
+          - /Common/http
+        lb_method: round-robin
+        state: present
+
+    - name: Add Pool Member
+      bigip_pool_member:
+        provider:
+          server: "{{ ansible_host }}"
+          user: "{{ ansible_user }}"
+          password: "{{ ansible_password }}"
+          validate_certs: false
+
+        pool: red-pool-1
+        partition: RED
+        host: 192.168.20.10
+        port: 80
+        state: present
+
+    - name: Create HTTP Virtual Server
+      bigip_virtual_server:
+        provider:
+          server: "{{ ansible_host }}"
+          user: "{{ ansible_user }}"
+          password: "{{ ansible_password }}"
+          validate_certs: false
+
+        name: red-virtual-http
+        partition: RED
+        destination: 192.168.10.20
+        port: 80
+        pool: red-pool-1
+        snat: /Common/LAN-10-SNAT
+        all_profiles:
+          - /Common/tcp
+        vlans_enabled: true
+        vlans:
+          - /Common/VIRTUAL
+        state: present
