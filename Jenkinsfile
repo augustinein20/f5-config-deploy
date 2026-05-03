@@ -1,14 +1,16 @@
 pipeline {
-
     agent any
 
-    stages {
+    triggers {
+        githubPush()
+    }
 
+    stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main',
-                credentialsId: 'github-ssh',
-                url: 'git@github.com:augustinein20/f5-config-deploy.git'
+                git branch: 'master',
+                    credentialsId: 'github-ssh',
+                    url: 'git@github.com:augustinein20/f5-config-deploy.git'
             }
         }
 
@@ -21,9 +23,15 @@ pipeline {
         stage('Run F5 Deployment') {
             steps {
                 sh '''
-                ansible-playbook playbooks/deploy_virtual.yml
+                ansible-playbook f5-config-deploy/as3/deploy_virtual.yml -i inventory/hosts
                 '''
             }
+        }
+    }
+
+    post {
+        failure {
+            echo "Deployment failed. Please check Jenkins logs and Ansible output."
         }
     }
 }
