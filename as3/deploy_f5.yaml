@@ -1,0 +1,40 @@
+- name: Deploy F5 Virtual Servers
+  hosts: f5
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Create HTTPS Virtual Server
+      f5networks.f5_modules.bigip_virtual_server:
+        provider:
+          server: "{{ ansible_host }}"
+          user: "{{ f5_user }}"
+          password: "{{ f5_password }}"
+          validate_certs: no
+        name: red-virtual-1
+        destination: 192.168.10.20
+        port: 443
+        pool: red-pool-1
+        profiles:
+          - /Common/http
+          - /Common/tcp
+        snat: /Common/LAN-10-SNAT
+        vlans:
+          - /Common/VIRTUAL
+        vlans_enabled: yes
+    - name: Create HTTP Virtual Server
+      f5networks.f5_modules.bigip_virtual_server:
+        provider:
+          server: "{{ ansible_host }}"
+          user: "{{ f5_user }}"
+          password: "{{ f5_password }}"
+          validate_certs: no
+        name: red-virtual-http
+        destination: 192.168.10.20
+        port: 80
+        pool: red-pool-1
+        profiles:
+          - /Common/tcp
+        snat: /Common/LAN-10-SNAT
+        vlans:
+          - /Common/VIRTUAL
+        vlans_enabled: yes
